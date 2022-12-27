@@ -35,7 +35,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DistroLauncher.cpp">
+    <ClCompile Include="FedoraWSL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Helpers.cpp">
@@ -52,7 +52,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="DistroLauncher.rc">
+    <ResourceCompile Include="FedoraWSL.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

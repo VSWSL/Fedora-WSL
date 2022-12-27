@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BA627106-E5F7-46EE-B8D7-2D5A760F2FB2}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>DistroLauncher</RootNamespace>
+    <RootNamespace>FedoraWSL</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>launcher</ProjectName>
   </PropertyGroup>
@@ -148,14 +148,14 @@
   <ItemGroup>
     <ClCompile Include="DistributionInfo.cpp" />
     <ClCompile Include="Helpers.cpp" />
-    <ClCompile Include="DistroLauncher.cpp" />
+    <ClCompile Include="FedoraWSL.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="WslApiLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="DistroLauncher.rc" />
+    <ResourceCompile Include="FedoraWSL.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include=".\images\icon.ico" />

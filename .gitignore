@@ -289,9 +289,9 @@ __pycache__/
 
 
 
-DistroLauncher/MSG*.bin
-DistroLauncher/messages.rc
-DistroLauncher/messages.h
+FedoraWSL/MSG*.bin
+FedoraWSL/messages.rc
+FedoraWSL/messages.h
 *.lib
 *.dll
 *.exe
