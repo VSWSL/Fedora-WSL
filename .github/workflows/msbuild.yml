@@ -46,4 +46,4 @@ jobs:
 
       - name: Build solution
         working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: python build.py --target=build --config=debug --platform=x64 --ci
+        run: python build.py --target=build --config=debug --platform=x64
