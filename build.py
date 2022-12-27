@@ -3,19 +3,14 @@ import sys
 
 PROGRAM_FILES = os.environ["ProgramFiles"]
 VISUAL_STUDIO_INSTALLED_VERSION = 2022
-VISUAL_STUDIO_INSTALLED_VARIANT = "Community"
+VISUAL_STUDIO_INSTALLED_VARIANT = ["Community", "Professional", "Enterprise"]
 
 MS_BUILD_PATH = '{}\\Microsoft Visual Studio\\{}\\{}\\MSBuild\\Current\\Bin\\MSBuild.exe'
 
-MS_BUILD_PATH = MS_BUILD_PATH.format(
-    PROGRAM_FILES,
-    VISUAL_STUDIO_INSTALLED_VERSION,
-    VISUAL_STUDIO_INSTALLED_VARIANT
-)
-
-if not os.path.exists(MS_BUILD_PATH):
-    print("MSBuild 2022 not found")
-    sys.exit(1)
+for variant in VISUAL_STUDIO_INSTALLED_VARIANT:
+    if os.path.exists(MS_BUILD_PATH.format(PROGRAM_FILES, VISUAL_STUDIO_INSTALLED_VERSION, variant)):
+        MS_BUILD_PATH = MS_BUILD_PATH.format(PROGRAM_FILES, VISUAL_STUDIO_INSTALLED_VERSION, variant)
+        break
 
 PROJECT_SOLUTION_PATH = os.path.join(os.path.curdir, 'FedoraWSL.sln')
 MS_BUILD_TARGET = "Build"
