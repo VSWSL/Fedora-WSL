@@ -36,6 +36,10 @@ jobs:
           url: "https://github.com/vineelsai26/Fedora-WSL-Rootfs/releases/download/1.0.0/rootfs.tar.gz"
           target: "x64/"
 
+      - name: Import certificate
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: Import-PfxCertificate -FilePath FedoraWSL-Appx-Test.pfx -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String $env:APPX_CERTIFICATE_PASSWORD -Force -AsPlainText)
+
       - name: Restore NuGet packages
         working-directory: ${{env.GITHUB_WORKSPACE}}
         run: nuget restore ${{env.SOLUTION_FILE_PATH}}
