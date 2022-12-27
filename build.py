@@ -36,6 +36,4 @@ BUILD_COMMAND = BUILD_COMMAND.format(
     MS_BUILD_PLATFORM
 )
 
-print(BUILD_COMMAND)
-
-os.system(BUILD_COMMAND)
+sys.exit(os.system(BUILD_COMMAND))
