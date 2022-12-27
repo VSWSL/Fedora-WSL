@@ -9,6 +9,7 @@ on:
 env:
   # Path to the solution file relative to the root of the project.
   SOLUTION_FILE_PATH: .
+  APPX_CERTIFICATE_PASSWORD: ${{secrets.APPX_CERTIFICATE_PASSWORD}}
 
 permissions:
   contents: read
@@ -34,4 +35,4 @@ jobs:
 
       - name: Build solution
         working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: python build.py
+        run: python build.py --target=build --config=debug --platform=x64 --ci-certificate=FedoraWSL-Appx-Test.pfx
