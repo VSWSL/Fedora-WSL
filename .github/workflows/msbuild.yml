@@ -29,10 +29,17 @@ jobs:
         with:
           python-version: "3.11"
 
+      - uses: suisei-cn/actions-download-file@v1.3.0
+        id: downloadfile # Remember to give an ID if you need the output filename
+        name: Download rootfs
+        with:
+          url: "https://github.com/vineelsai26/Fedora-WSL-Rootfs/releases/download/1.0.0/rootfs.tar.gz"
+          target: "x64/"
+
       - name: Restore NuGet packages
         working-directory: ${{env.GITHUB_WORKSPACE}}
         run: nuget restore ${{env.SOLUTION_FILE_PATH}}
 
       - name: Build solution
         working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: python build.py --target=build --config=debug --platform=x64 --ci-certificate=FedoraWSL-Appx-Test.pfx
+        run: python build.py --target=build --config=debug --platform=x64 --ci

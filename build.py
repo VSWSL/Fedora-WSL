@@ -32,10 +32,10 @@ if len(sys.argv) > 1:
             MS_BUILD_TARGET = sys.argv[i].split("=")[1].capitalize()
         elif sys.argv[i].startswith("--platform="):
             MS_BUILD_PLATFORM = sys.argv[i].split("=")[1]
-        elif sys.argv[i].startswith("--ci-certificate="):
-            MS_BUILD_CERTIFICATE = "/p:PackageCertificateKeyFile={} /p:PackageCertificatePassword={}".format(
-                sys.argv[i].split("=")[1],
-                os.environ["APPX_CERTIFICATE_PASSWORD"],
+        elif sys.argv[i] == "--ci":
+            MS_BUILD_CERTIFICATE = "/p:PackageCertificateKeyFile=FedoraWSL-Appx-Test.pfx /p:PackageCertificatePassword={}"
+            MS_BUILD_CERTIFICATE = MS_BUILD_CERTIFICATE.format(
+                os.environ["APPX_CERTIFICATE_PASSWORD"]
             )
 
 BUILD_COMMAND = "\"{}\" {} /t:{} /m /nr:true {} /p:Configuration={};Platform={}"
