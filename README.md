@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://github.com/VsTechDev/Fedora-WSL">
-    <img src="https://github.com/VsTechDev/Fedora-WSL/blob/readme/FedoraWSL-Appx/Assets/StoreLogo.scale-150.png?raw=true" alt="Logo" width="80" height="80">
+    <img src="https://github.com/VsTechDev/Fedora-WSL/blob/main/FedoraWSL-Appx/Assets/StoreLogo.scale-150.png?raw=true" alt="Logo" width="80" height="80">
   </a>
 
   <h3 align="center">Fedora WSL</h3>
