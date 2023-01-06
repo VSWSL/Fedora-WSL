@@ -82,6 +82,8 @@
 python build.py --target=build --config=debug --platform=x64
 ```
 
+https://user-images.githubusercontent.com/52851879/211007722-3743c1a9-62a4-474c-b1be-f31c2ec4e25a.mov
+
 ### Root FS
 
 - The main Root FS file this app is based on is at - https://github.com/VsTechDev/Fedora-WSL-RootFS
