@@ -1,177 +1,91 @@
-# Fedora WSL
+<div align="center">
+  <a href="https://github.com/VsTechDev/Fedora-WSL">
+    <img src="https://github.com/VsTechDev/Fedora-WSL/blob/readme/FedoraWSL-Appx/Assets/StoreLogo.scale-150.png?raw=true" alt="Logo" width="80" height="80">
+  </a>
 
-## Introduction
+  <h3 align="center">Fedora WSL</h3>
 
-This is the C++ reference implementation for a Windows Subsystem for Linux (WSL) distribution installer/launcher application. Every distro package must include a launcher app, which is responsible for completing installation & registration of your distro with WSL, and for launching new distro instances atop WSL.
+  <p align="center">
+    This is an unofficial Fedora WSL based on the rootfs of fedora docker images with a few packages installed to make your life easy
+    <br />
+    <a href="https://github.com/VsTechDev/Fedora-WSL#readme"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <a href="https://apps.microsoft.com/store/detail/fedora-wsl/9NPCP8DRCHSN">Download</a>
+    ·
+    <a href="https://github.com/VsTechDev/Fedora-WSL/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/VsTechDev/Fedora-WSL/issues">Request Feature</a>
+  </p>
+</div>
 
-Once you've built your distro launcher, packaged it along with the required art assets, manifest, and distro.tar.gz, and digitally signed the package, you will be able to sideload your distro on your own machine(s).
+<p align="center">
+  <a herf="https://github.com/VsTechDev/Fedora-WSL/graphs/contributors">
+    <img src="https://img.shields.io/github/contributors/VsTechDev/Fedora-WSL" />
+  </a>
+  <a herf="https://github.com/VsTechDev/Fedora-WSL/network/members">
+    <img src="https://img.shields.io/github/forks/VsTechDev/Fedora-WSL" />
+  </a>
+  <a herf="https://github.com/VsTechDev/Fedora-WSL/stargazers">
+    <img src="https://img.shields.io/github/stars/VsTechDev/Fedora-WSL" />
+  </a>
+  <a herf="https://github.com/VsTechDev/Fedora-WSL/issues">
+    <img src="https://img.shields.io/github/issues/VsTechDev/Fedora-WSL" />
+  </a>
+  <a herf="https://github.com/VsTechDev/Fedora-WSL/blob/master/LICENSE.md">
+    <img src="https://img.shields.io/github/license/VsTechDev/Fedora-WSL" />
+  </a>
+</p>
 
-## Goals
+![image](https://user-images.githubusercontent.com/52851879/211003617-2df2e292-a6a0-48d1-8842-2d59eb387248.png)
 
-The goal of this project is to enable:
 
-* Linux distribution owners to package and submit an application that runs on top of WSL to the Microsoft Store
-* Developers to create custom Linux distributions that can be sideloaded onto their dev machine
+## Installation
 
-## Contents
+- Make sure WSL is enabled in you system - https://learn.microsoft.com/en-us/windows/wsl/install
 
-This reference launcher provides the following functionality:
-(where `launcher.exe` is replaced by the distro-specific name)
+- You can install Fedora WSL from [Microsoft Store](https://apps.microsoft.com/store/detail/fedora-wsl/9NPCP8DRCHSN) ***OR*** if you don't want to use Microsoft Store then download the latest msix package from [Release Page](https://github.com/VsTechDev/Fedora-WSL/releases/latest)
 
-* `launcher.exe`
-  * Launches the user's default shell in the user's home directory.
+***Note*** - to install manually from the msix package you need to install the .cer file first to the "Trusted Root Certificate Store" of the "local machine"
 
-* `launcher.exe install [--root]`
-  * Install the distribution and do not launch the shell when complete.
-    * `--root`: Do not create a user account and leave the default user set to root.
+- After installation is complete from microsoft store or manual install when you open the app you will be presented with a screen to create a user account go ahead with it and complete the account creation to finish installation
 
-* `launcher.exe run <command line>`
-  * Run the provided command line in the current working directory. If no command line is provided, the default shell is launched.
-  * Everything after `run` is passed to WslLaunchInteractive.
+![image](https://user-images.githubusercontent.com/52851879/211003117-5ce50ea6-4598-4bdf-8314-c9de65a9947b.png)
 
-* `launcher.exe config [setting [value]]`
-  * Configure settings for this distribution.
-  * Settings:
-    * `--default-user <username>`: Sets the default user to <username>. This must be an existing user.
+***Note*** - The password entering feild does not display your password but it still records it
 
-* `launcher.exe help`
-  * Print usage information.
+## Build
 
-## Launcher Outline
+### Prerequisites
 
-This is the basic flow of how the launcher code is set up.
+- Visual Studio 2022
+- Python
 
-1. If the distribution is not registered with WSL, register it. Registration extracts the tar.gz file that is included in your distribution appx.
-2. Once the distro is successfully registered, any other pre-launch setup is performed in `InstallDistribution()`. This is where distro-specific setup can be performed. As an example, the reference implementation creates a user account and sets this user account as the default for the distro.
-    * Note: The commands used to query and create user accounts in this reference implementation are Ubuntu-specific; change as necessary to match the needs of your distro.
-3. Once the distro is configured, parse any other command-line arguments. The details of these arguments are described above, in the [Introduction](#Introduction).
+### Getting Started
 
-## Project Structure
+- Fork and clone your fork of the Project
 
-The distro launcher is comprised of two Visual Studio projects - `launcher` and `FedoraWSL-Appx`. The `launcher` project builds the actual executable that is run when a user launches the app. The `FedoraWSL-Appx` builds the distro package with all the correctly scaled assets and other dependencies. Code changes will be built in the `launcher` project (under `FedoraWSL/`). Manifest changes are applied in the `FedoraWSL-Appx` project (under `FedoraWSL-Appx/`).
+- Generate a test certificate:
 
-## Getting Started
+  - In Visual Studio, open FedoraWSL-Appx/MyDistro.appxmanifest
+  - Select the Packaging tab
+  - Select "Choose Certificate"
+  - Click the Configure Certificate drop-down and select Create test certificate.
 
-1. Generate a test certificate:
-    1. In Visual Studio, open `FedoraWSL-Appx/MyDistro.appxmanifest`
-    1. Select the Packaging tab
-    1. Select "Choose Certificate"
-    1. Click the Configure Certificate drop down and select Create test certificate.
+- Copy tar.gz containing your distro into the x64 folder at the root of the project and rename it to rootfs.tar.gz
 
-2. Edit your distribution-specific information in `DistributionInfo.h` and `DistributionInfo.cpp`. **NOTE: The `DistributionInfo::Name` variable must uniquely identify your distribution and cannot change from one version of your app to the next.**
-    > Note: The examples for creating a user account and querying the UID are from an Ubuntu-based system, and may need to be modified to work appropriately on your distribution.
+***Note*** - You can get the rootfs.tar.gz file from the releases page 
 
-3. Add an icon (.ico) and logo (.png) to the `/images` directory. The logo will be used in the Start Menu and the taskbar for your launcher, and the icon will appear on the Console window.
-    > Note: The icon must be named `icon.ico`.
+- Then open a terminal window in the root of the project and type in the command
 
-4. Pick the name you'd like to make this distro callable from the command line. For the rest of the README, I'll be using `mydistro` or `mydistro.exe`. **This is the name of your executable** and should be unique.
-
-5. Make sure to change the name of the project in the `FedoraWSL-Appx/FedoraWSL-Appx.vcxproj` file to the name of your executable we picked in step 4. By default, the lines should look like:
-
-``` xml
-<PropertyGroup Label="Globals">
-  ...
-  <TargetName>mydistro</TargetName>
-</PropertyGroup>
+```sh
+python build.py --target=build --config=debug --platform=x64
 ```
 
-So, if I wanted to instead call my distro "TheBestDistroEver", I'd change this to:
+https://user-images.githubusercontent.com/52851879/211007722-3743c1a9-62a4-474c-b1be-f31c2ec4e25a.mov
 
-``` xml
-<PropertyGroup Label="Globals">
-  ...
-  <TargetName>TheBestDistroEver</TargetName>
-</PropertyGroup>
-```
+### Root FS
 
-> Note: **DO NOT** change the ProjectName of the `FedoraWSL/FedoraWSL.vcxproj` from the value `launcher`. Doing so will break the build, as the FedoraWSL-Appx project is looking for the output of this project as `launcher.exe`.
+- The main Root FS file this app is based on is at - https://github.com/VsTechDev/Fedora-WSL-RootFS
 
-6. Update `MyDistro.appxmanifest`. There are several properties that are in the manifest that will need to be updated with your specific values:
-    1. Note the `Identity Publisher` value (by default, `"CN=DistroOwner"`). We'll need that for testing the application.
-    1. Ensure `<desktop:ExecutionAlias Alias="mydistro.exe" />` ends in ".exe". This is the command that will be used to launch your distro from the command line and should match the executable name we picked in step 4.
-    1. Make sure each of the `Executable` values matches the executable name we picked in step 4.
-
-7. Copy your tar.gz containing your distro into the root of the project and rename it to `rootfs.tar.gz`.
-
-## Setting up your Windows Environment
-
-You will need a Windows environment to test that your app installs and works as expected. To set up a Windows environment for testing you can follow the steps from the [Windows Dev Center](https://developer.microsoft.com/en-us/windows/downloads/virtual-machines).
-
-> Note: If you are using Hyper-V you can use the new VM gallery to easily spin up a Windows instance.
-
-Also, to allow your locally built distro package to be manually side-loaded, ensure you've enabled Developer Mode in the Settings app (sideloading won't work without it).
-
-## Build and Test
-
-To help building and testing the FedoraWSL project, we've included several scripts to automate some tasks. You can either choose to use these scripts from the command line, or work directly in Visual Studio, whatever your preference is.
-
-> **Note**: some sideloading/deployment steps don't work if you mix and match Visual Studio and the command line for development. If you run into errors while trying to deploy your app after already deploying it once, the easiest step is usually just to uninstall the previously sideloaded version and try again.
-
-### Building the Project (Command line)
-
-To compile the project, you can simply type `build` in the root of the project to use MSBuild to build the solution. This is useful for verifying that your application compiles. It will also build an appx for you to sideload on your dev machine for testing.
-
-> Note: We recommend that you build your launcher from the "Developer Command Prompt for Visual Studio" which can be launched from the start menu. This command-prompt sets up several path and environment variables to make building easier and smoother.
-
-`build.bat` assumes that MSBuild is installed at one of the following paths:
-`%ProgramFiles*%\MSBuild\14.0\bin\msbuild.exe` or
-`%ProgramFiles*%\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\msbuild.exe` or
-`%ProgramFiles*%\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\msbuild.exe`.
-
-If that's not the case, then you will need to modify that script.
-
-Once you've completed the build, the packaged appx should be placed in a directory like `WSL-FedoraWSL\x64\Release\FedoraWSL-Appx` and should be named something like `FedoraWSL-Appx_1.0.0.0_x64.appx`. Simply double click that appx file to open the sideloading dialog.
-
-You can also use the PowerShell cmdlet `Add-AppxPackage` to register your appx:
-
-``` powershell
-powershell Add-AppxPackage x64\Debug\FedoraWSL-Appx\FedoraWSL-Appx_1.0.0.0_x64_Debug.appx
-```
-
-### Building Project (Visual Studio)
-
-You can also easily build and deploy the distro launcher from Visual Studio. To sideload your appx on your machine for testing, all you need to do is right-click on the "Solution (FedoraWSL)" in the Solution Explorer and click "Deploy Solution". This should build the project and sideload it automatically for testing.
-
-In order run your solution under the Visual Studio debugger, you will need to copy your rootfs.tar.gz file into your output folder, for example: `x64\Debug`. **NOTE: If you have registered your distribution by this method, you will need to manually unregister it via wslconfig.exe /unregister**
-
-### Installing & Testing
-
-You should now have a finished appx sideloaded on your machine for testing.
-
-To install your distro package, double click on the signed appx and click "Install". Note that this only installs the appx on your system - it doesn't unzip the tar.gz or register the distro yet.
-
-You should now find your distro in the Start menu, and you can launch your distro by clicking its Start menu tile or executing your distro from the command line by entering its name into a Cmd/PowerShell Console.
-
-When you first run your newly installed distro, it is unpacked and registered with WSL. This can take a couple of minutes while all your distro files are unpacked and copied to your drive.
-
-Once complete, you should see a Console window with your distro running inside it.
-
-### Publishing
-
-If you are a distro vendor and want to publish  your distro to the Windows store, you will need to complete some pre-requisite steps to ensure the quality and integrity of the WSL distro ecosystem, and to safeguard our users:
-
-#### Publishing Pre-Requisites
-
-1. Sign up for an "Company" Windows Developer Account <https://developer.microsoft.com/en-us/store/register>.
-    > Note: This can take a week or more since you'll be required to confirm your organization's identity with an independent verification service via email and/or telephone.
-1. Follow the guides to publish your distro as a UWP app: <https://docs.microsoft.com/en-us/windows/uwp/publish/>
-1. [Optional] Reach out to the WSL team at wslpartners@microsoft.com to introduce us to your distro!
-
-#### Publishing Code changes
-
-You'll also need to change a few small things in your project to prepare your distro for publishing to the Windows store
-
-1. In your appxmanifest, you will need to change the values of the Identity field to match your identity in your Windows Store account:
-
-``` xml
-<Identity Name="1234YourCompanyName.YourAppName"
-          Version="1.0.1.0"
-          Publisher="CN=12345678-045C-ABCD-1234-ABCDEF987654"
-          ProcessorArchitecture="x64" />
-```
-
-  > **NOTE**: Visual Studio can update this for you! You can do that by right-clicking on "FedoraWSL-Appx (Universal Windows)" in the solution explorer and clicking on "Store... Associate App with the Store..." and following the wizard.
-
-2. You will either need to run `build rel` from the command line to generate the Release version of your appx or use Visual Studio directly to upload your package to the store. You can do this by right-clicking on "FedoraWSL-Appx (Universal Windows)" in the solution explorer and clicking on "Store... Create App Packages..." and following the wizard.
-
-Also, make sure to check out the [Notes for uploading to the Store](https://github.com/Microsoft/WSL-FedoraWSL/wiki/Notes-for-uploading-to-the-Store) page on our wiki for more information.
+- It is based on Fedora Docker Image with few tweaks and pre-installed dependencies
