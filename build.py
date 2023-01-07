@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 
 PROGRAM_FILES = os.environ["ProgramFiles"]
 VISUAL_STUDIO_INSTALLED_VERSION = 2022
@@ -25,10 +26,12 @@ MS_BUILD_PLATFORM = "x64"
 
 if len(sys.argv) > 1:
     for i in range(1, len(sys.argv)):
-        if sys.argv[i].startswith("--config="):
-            MS_BUILD_CONFIG = sys.argv[i].split("=")[1].capitalize()
-        elif sys.argv[i].startswith("--target="):
+        if sys.argv[i].startswith("--target="):
             MS_BUILD_TARGET = sys.argv[i].split("=")[1].capitalize()
+            if MS_BUILD_TARGET == "Clean":
+                break
+        elif sys.argv[i].startswith("--config="):
+            MS_BUILD_CONFIG = sys.argv[i].split("=")[1].capitalize()
         elif sys.argv[i].startswith("--platform="):
             MS_BUILD_PLATFORM = sys.argv[i].split("=")[1]
 
@@ -42,4 +45,32 @@ BUILD_COMMAND = BUILD_COMMAND.format(
     MS_BUILD_PLATFORM
 )
 
-sys.exit(os.system(BUILD_COMMAND))
+exitCode = os.system(BUILD_COMMAND)
+
+if (MS_BUILD_TARGET == "Clean"):
+    cleanDirs = [
+        "FedoraWSL\\x64",
+        "FedoraWSL\\ARM64",
+        "FedoraWSL-Appx\\x64",
+        "FedoraWSL-Appx\\ARM64",
+        "FedoraWSL-Appx\\BundleArtifacts",
+        "x64\\Debug",
+        "x64\\Release",
+        "AppPackages"
+    ]
+
+    cleanFiles = [
+        "FedoraWSL-Appx\\FedoraWSL-Appx.vcxproj.user",
+        "FedoraWSL\\FedoraWSL.vcxproj.user",
+        "FedoraWSL\\MSG00409.bin",
+    ]
+
+    for cleanDir in cleanDirs:
+        if os.path.exists(cleanDir):
+            shutil.rmtree(cleanDir)
+
+    for cleanFile in cleanFiles:
+        if os.path.exists(cleanFile):
+            os.remove(cleanFile)
+
+sys.exit(exitCode)
