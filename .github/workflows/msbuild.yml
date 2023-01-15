@@ -36,9 +36,16 @@ jobs:
           url: "https://github.com/VsTechDev/Fedora-WSL/releases/download/v37.0.1.0/rootfs.tar.gz"
           target: "x64/"
 
+      - name: Write file from base64 string
+        id: write_file
+        uses: timheuer/base64-to-file@v1.2
+        with:
+          fileName: "FedoraWSL-Appx-Test.pfx"
+          encodedString: ${{ secrets.APPX_TEST_CERTIFICATE }}
+
       - name: Import certificate
         working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: Import-PfxCertificate -FilePath FedoraWSL-Appx-Test.pfx -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String $env:APPX_CERTIFICATE_PASSWORD -Force -AsPlainText)
+        run: Import-PfxCertificate -FilePath ${{ steps.write_file.outputs.filePath }} -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String $env:APPX_CERTIFICATE_PASSWORD -Force -AsPlainText)
 
       - name: Restore NuGet packages
         working-directory: ${{env.GITHUB_WORKSPACE}}
