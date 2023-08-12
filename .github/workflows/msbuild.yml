@@ -17,7 +17,10 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
-
+    strategy:
+      matrix: 
+        arch: [arm64,x64]
+        
     steps:
       - uses: actions/checkout@v3
 
@@ -29,12 +32,13 @@ jobs:
         with:
           python-version: "3.11"
 
-      - uses: suisei-cn/actions-download-file@v1
+      - uses: suisei-cn/actions-download-file@v1.4.0
         id: downloadfile # Remember to give an ID if you need the output filename
         name: Download rootfs
         with:
-          url: "https://github.com/VsTechDev/Fedora-WSL/releases/download/v37.0.1.0/rootfs.tar.gz"
-          target: "x64/"
+          url: https://github.com/VsTechDev/Fedora-WSL/releases/latest/download/rootfs.${{matrix.arch}}.tar.gz
+          target: ${{matrix.arch}}
+          filename: rootfs.tar.gz
 
       - name: Write file from base64 string
         id: write_file
@@ -53,4 +57,4 @@ jobs:
 
       - name: Build solution
         working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: python build.py --target=build --config=debug --platform=x64
+        run: python build.py --target=build --config=release --platform=${{matrix.arch}}
