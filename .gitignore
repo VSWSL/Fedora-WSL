@@ -296,3 +296,4 @@ FedoraWSL/messages.h
 *.dll
 *.exe
 *.tar.gz
+.DS_Store

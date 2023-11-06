@@ -5,11 +5,12 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+  workflow_dispatch:
 
 env:
   # Path to the solution file relative to the root of the project.
   SOLUTION_FILE_PATH: .
-  APPX_CERTIFICATE_PASSWORD: ${{secrets.APPX_CERTIFICATE_PASSWORD}}
+  APPX_CERTIFICATE_PASSWORD: ${{ secrets.APPX_CERTIFICATE_PASSWORD }}
 
 permissions:
   contents: read
@@ -18,11 +19,12 @@ jobs:
   build:
     runs-on: windows-latest
     strategy:
-      matrix: 
-        arch: [arm64,x64]
-        
+      matrix:
+        platform: [arm64, x64]
+        target: [debug, release]
+
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1
@@ -32,29 +34,44 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Convert x64 to amd64
+        id: convert_x64
+        run: |
+          if ("${{ matrix.platform }}" -eq "x64") {
+              "platform=amd64" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          } else {
+              "platform=${{ matrix.platform }}" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+
       - uses: suisei-cn/actions-download-file@v1.4.0
         id: downloadfile # Remember to give an ID if you need the output filename
         name: Download rootfs
         with:
-          url: https://github.com/VsTechDev/Fedora-WSL/releases/latest/download/rootfs.${{matrix.arch}}.tar.gz
-          target: ${{matrix.arch}}
+          url: https://github.com/VSWSL/Fedora-WSL-RootFS/releases/latest/download/rootfs.${{ steps.convert_x64.outputs.platform }}.tar.gz
+          target: ${{ matrix.platform }}
           filename: rootfs.tar.gz
 
       - name: Write file from base64 string
         id: write_file
-        uses: timheuer/base64-to-file@v1.2
+        uses: timheuer/base64-to-file@v1
         with:
           fileName: "FedoraWSL-Appx-Test.pfx"
           encodedString: ${{ secrets.APPX_TEST_CERTIFICATE }}
 
       - name: Import certificate
-        working-directory: ${{env.GITHUB_WORKSPACE}}
+        working-directory: ${{ github.workspace }}
         run: Import-PfxCertificate -FilePath ${{ steps.write_file.outputs.filePath }} -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String $env:APPX_CERTIFICATE_PASSWORD -Force -AsPlainText)
 
       - name: Restore NuGet packages
-        working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: nuget restore ${{env.SOLUTION_FILE_PATH}}
+        working-directory: ${{ github.workspace }}
+        run: nuget restore ${{ env.SOLUTION_FILE_PATH }}
 
       - name: Build solution
-        working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: python build.py --target=build --config=release --platform=${{matrix.arch}}
+        working-directory: ${{ github.workspace }}
+        run: python build.py --target=build --config=${{ matrix.target }} --platform=${{ matrix.platform }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: FedoraWSL-Appx-${{ matrix.platform }}-${{ matrix.target }}
+          path: AppPackages/FedoraWSL-Appx/FedoraWSL-Appx_*/FedoraWSL-Appx_*.*
