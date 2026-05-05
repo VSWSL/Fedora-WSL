@@ -44,6 +44,11 @@ if len(sys.argv) > 1:
             MS_BUILD_CONFIG = sys.argv[i].split("=")[1].capitalize()
         elif sys.argv[i].startswith("--platform="):
             MS_BUILD_PLATFORM = sys.argv[i].split("=")[1]
+            # Normalize ARM64: the .vcxproj/.sln configurations declare
+            # Platform=ARM64 (uppercase) and recent MSBuild versions match
+            # the platform string case-sensitively.
+            if MS_BUILD_PLATFORM.lower() == "arm64":
+                MS_BUILD_PLATFORM = "ARM64"
 
 BUILD_COMMAND = "\"{}\" {} /t:{} /m /nr:true /p:Configuration={};Platform={}"
 
