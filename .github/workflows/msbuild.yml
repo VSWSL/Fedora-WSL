@@ -17,6 +17,13 @@ permissions:
 
 jobs:
   build:
+    # NOTE: this workflow stays on a GitHub-hosted Windows runner because the
+    # project builds a UWP appx (FedoraWSL-Appx) plus an ARM64 launcher, both
+    # of which need full Visual Studio components (UWP build tools and the
+    # ARM64 C++ toolset). The Blacksmith Windows image ships only VS Build
+    # Tools 2022 by default, which omits those components. If a custom
+    # Blacksmith Windows image with full VS becomes available, swap this back
+    # to a `blacksmith-Nvcpu-windows-2025` label.
     runs-on: windows-latest
     strategy:
       matrix:
@@ -71,7 +78,7 @@ jobs:
         run: python build.py --target=build --config=${{ matrix.target }} --platform=${{ matrix.platform }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: FedoraWSL-Appx-${{ matrix.platform }}-${{ matrix.target }}
           path: AppPackages/FedoraWSL-Appx/FedoraWSL-Appx_*/FedoraWSL-Appx_*.*
