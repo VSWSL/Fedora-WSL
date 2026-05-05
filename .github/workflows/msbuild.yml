@@ -17,7 +17,14 @@ permissions:
 
 jobs:
   build:
-    runs-on: blacksmith-4vcpu-windows-2025
+    # NOTE: this workflow stays on a GitHub-hosted Windows runner because the
+    # project builds a UWP appx (FedoraWSL-Appx) plus an ARM64 launcher, both
+    # of which need full Visual Studio components (UWP build tools and the
+    # ARM64 C++ toolset). The Blacksmith Windows image ships only VS Build
+    # Tools 2022 by default, which omits those components. If a custom
+    # Blacksmith Windows image with full VS becomes available, swap this back
+    # to a `blacksmith-Nvcpu-windows-2025` label.
+    runs-on: windows-latest
     strategy:
       matrix:
         platform: [arm64, x64]
@@ -28,59 +35,6 @@ jobs:
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1
-
-      - name: Install missing Visual Studio components
-        shell: pwsh
-        run: |
-          # The Blacksmith Windows runner ships VS Build Tools 2022 with only
-          # the basic C++ x86/x64 toolset. The launcher Win32 project on x64
-          # builds out of the box, but FedoraWSL-Appx (UWP) needs the
-          # Universal build tools workload, and the ARM64 jobs additionally
-          # need the ARM64 C++ tools.
-          $vsInstaller = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe"
-          $installPath = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
-          if (-not (Test-Path $vsInstaller)) {
-            Write-Error "vs_installer.exe not found at $vsInstaller"
-            exit 1
-          }
-          if (-not (Test-Path $installPath)) {
-            Write-Error "Visual Studio BuildTools not found at $installPath"
-            exit 1
-          }
-          # Build the argument list as an array; pass it to Start-Process via
-          # array splatting so PowerShell quotes paths with spaces correctly.
-          $vsArgs = @(
-            'modify',
-            '--installPath', $installPath,
-            '--add', 'Microsoft.VisualStudio.Workload.UniversalBuildTools',
-            '--includeRecommended',
-            '--quiet', '--norestart', '--nocache'
-          )
-          if ('${{ matrix.platform }}' -eq 'arm64') {
-            $vsArgs += @('--add', 'Microsoft.VisualStudio.Component.VC.Tools.ARM64')
-          }
-          Write-Host "Running: vs_installer.exe $($vsArgs -join ' ')"
-          # Launch the installer; vs_installer forks the actual setup engine,
-          # so wait on it explicitly instead of relying on --wait, which is
-          # unreliable when invoked via Start-Process.
-          $proc = Start-Process -FilePath $vsInstaller -ArgumentList $vsArgs -PassThru
-          # Wait for vs_installer to exit, then for any setup engine children
-          # (setup.exe / Microsoft.VisualStudio.Setup.Engine) that it spawned.
-          $proc.WaitForExit()
-          $deadline = (Get-Date).AddMinutes(30)
-          while ((Get-Date) -lt $deadline) {
-            $children = Get-Process -ErrorAction SilentlyContinue |
-              Where-Object { $_.ProcessName -in @('setup', 'vs_installer', 'vs_installershell', 'VSIXInstaller') }
-            if (-not $children) { break }
-            Start-Sleep -Seconds 5
-          }
-          $exitCode = $proc.ExitCode
-          Write-Host "vs_installer parent exited with code $exitCode"
-          # 0: success. 3010: success but reboot requested. 862968804: success, no changes needed.
-          if ($exitCode -ne 0 -and $exitCode -ne 3010 -and $exitCode -ne 862968804) {
-            Write-Error "Visual Studio installer failed with exit code $exitCode"
-            exit 1
-          }
 
       - name: Setup Python
         uses: actions/setup-python@v4
