@@ -29,6 +29,35 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1
 
+      - name: Install ARM64 C++ build tools
+        if: matrix.platform == 'arm64'
+        shell: pwsh
+        run: |
+          $vsInstaller = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe"
+          $installPath = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
+          if (-not (Test-Path $vsInstaller)) {
+            Write-Error "vs_installer.exe not found at $vsInstaller"
+            exit 1
+          }
+          if (-not (Test-Path $installPath)) {
+            Write-Error "Visual Studio BuildTools not found at $installPath"
+            exit 1
+          }
+          Write-Host "Adding ARM64 C++ components to $installPath"
+          $arguments = @(
+            "modify",
+            "--installPath", "`"$installPath`"",
+            "--add", "Microsoft.VisualStudio.Component.VC.Tools.ARM64",
+            "--add", "Microsoft.VisualStudio.Component.UWP.VC.ARM64",
+            "--quiet", "--norestart", "--nocache", "--wait"
+          )
+          $proc = Start-Process -FilePath $vsInstaller -ArgumentList $arguments -Wait -PassThru -NoNewWindow
+          # vs_installer can return 3010 when a reboot is requested, which is fine for CI.
+          if ($proc.ExitCode -ne 0 -and $proc.ExitCode -ne 3010) {
+            Write-Error "vs_installer modify failed with exit code $($proc.ExitCode)"
+            exit 1
+          }
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
