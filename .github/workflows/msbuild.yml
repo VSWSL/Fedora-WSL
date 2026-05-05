@@ -29,32 +29,53 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1
 
-      - name: Install ARM64 C++ build tools
-        if: matrix.platform == 'arm64'
+      - name: Install missing Visual Studio components
         shell: pwsh
         run: |
-          $installerDir = "C:\Program Files (x86)\Microsoft Visual Studio\Installer"
-          $setup = Join-Path $installerDir "setup.exe"
-          $vsInstaller = Join-Path $installerDir "vs_installer.exe"
+          # The Blacksmith Windows runner ships VS Build Tools 2022 with only
+          # the basic C++ x86/x64 toolset. The launcher Win32 project on x64
+          # builds out of the box, but FedoraWSL-Appx (UWP) needs the
+          # Universal build tools workload, and the ARM64 jobs additionally
+          # need the ARM64 C++ tools.
+          $vsInstaller = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe"
           $installPath = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
+          if (-not (Test-Path $vsInstaller)) {
+            Write-Error "vs_installer.exe not found at $vsInstaller"
+            exit 1
+          }
           if (-not (Test-Path $installPath)) {
             Write-Error "Visual Studio BuildTools not found at $installPath"
             exit 1
           }
-          # Prefer setup.exe (synchronous, returns the real setup engine exit
-          # code) over vs_installer.exe (which forks and returns immediately).
-          $exe = if (Test-Path $setup) { $setup } elseif (Test-Path $vsInstaller) { $vsInstaller } else {
-            Write-Error "Neither setup.exe nor vs_installer.exe was found in $installerDir"
-            exit 1
+          # Build the argument list as an array; pass it to Start-Process via
+          # array splatting so PowerShell quotes paths with spaces correctly.
+          $vsArgs = @(
+            'modify',
+            '--installPath', $installPath,
+            '--add', 'Microsoft.VisualStudio.Workload.UniversalBuildTools',
+            '--includeRecommended',
+            '--quiet', '--norestart', '--nocache'
+          )
+          if ('${{ matrix.platform }}' -eq 'arm64') {
+            $vsArgs += @('--add', 'Microsoft.VisualStudio.Component.VC.Tools.ARM64')
           }
-          Write-Host "Using $exe to add ARM64 C++ components to $installPath"
-          # Build the command line manually so the spaces and parentheses in
-          # $installPath survive the round trip into ProcessStartInfo.
-          $cmdLine = 'modify --installPath "{0}" --add Microsoft.VisualStudio.Component.VC.Tools.ARM64 --quiet --norestart --nocache --wait' -f $installPath
-          Write-Host "Command line: $cmdLine"
-          $proc = Start-Process -FilePath $exe -ArgumentList $cmdLine -Wait -PassThru -NoNewWindow
+          Write-Host "Running: vs_installer.exe $($vsArgs -join ' ')"
+          # Launch the installer; vs_installer forks the actual setup engine,
+          # so wait on it explicitly instead of relying on --wait, which is
+          # unreliable when invoked via Start-Process.
+          $proc = Start-Process -FilePath $vsInstaller -ArgumentList $vsArgs -PassThru
+          # Wait for vs_installer to exit, then for any setup engine children
+          # (setup.exe / Microsoft.VisualStudio.Setup.Engine) that it spawned.
+          $proc.WaitForExit()
+          $deadline = (Get-Date).AddMinutes(30)
+          while ((Get-Date) -lt $deadline) {
+            $children = Get-Process -ErrorAction SilentlyContinue |
+              Where-Object { $_.ProcessName -in @('setup', 'vs_installer', 'vs_installershell', 'VSIXInstaller') }
+            if (-not $children) { break }
+            Start-Sleep -Seconds 5
+          }
           $exitCode = $proc.ExitCode
-          Write-Host "Installer exited with code $exitCode"
+          Write-Host "vs_installer parent exited with code $exitCode"
           # 0: success. 3010: success but reboot requested. 862968804: success, no changes needed.
           if ($exitCode -ne 0 -and $exitCode -ne 3010 -and $exitCode -ne 862968804) {
             Write-Error "Visual Studio installer failed with exit code $exitCode"
