@@ -33,28 +33,31 @@ jobs:
         if: matrix.platform == 'arm64'
         shell: pwsh
         run: |
-          $vsInstaller = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe"
+          $installerDir = "C:\Program Files (x86)\Microsoft Visual Studio\Installer"
+          $setup = Join-Path $installerDir "setup.exe"
+          $vsInstaller = Join-Path $installerDir "vs_installer.exe"
           $installPath = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
-          if (-not (Test-Path $vsInstaller)) {
-            Write-Error "vs_installer.exe not found at $vsInstaller"
-            exit 1
-          }
           if (-not (Test-Path $installPath)) {
             Write-Error "Visual Studio BuildTools not found at $installPath"
             exit 1
           }
-          Write-Host "Adding ARM64 C++ components to $installPath"
-          $arguments = @(
-            "modify",
-            "--installPath", "`"$installPath`"",
-            "--add", "Microsoft.VisualStudio.Component.VC.Tools.ARM64",
-            "--add", "Microsoft.VisualStudio.Component.UWP.VC.ARM64",
-            "--quiet", "--norestart", "--nocache", "--wait"
-          )
-          $proc = Start-Process -FilePath $vsInstaller -ArgumentList $arguments -Wait -PassThru -NoNewWindow
-          # vs_installer can return 3010 when a reboot is requested, which is fine for CI.
-          if ($proc.ExitCode -ne 0 -and $proc.ExitCode -ne 3010) {
-            Write-Error "vs_installer modify failed with exit code $($proc.ExitCode)"
+          # Prefer setup.exe (synchronous, returns the real setup engine exit
+          # code) over vs_installer.exe (which forks and returns immediately).
+          $exe = if (Test-Path $setup) { $setup } elseif (Test-Path $vsInstaller) { $vsInstaller } else {
+            Write-Error "Neither setup.exe nor vs_installer.exe was found in $installerDir"
+            exit 1
+          }
+          Write-Host "Using $exe to add ARM64 C++ components to $installPath"
+          # Build the command line manually so the spaces and parentheses in
+          # $installPath survive the round trip into ProcessStartInfo.
+          $cmdLine = 'modify --installPath "{0}" --add Microsoft.VisualStudio.Component.VC.Tools.ARM64 --quiet --norestart --nocache --wait' -f $installPath
+          Write-Host "Command line: $cmdLine"
+          $proc = Start-Process -FilePath $exe -ArgumentList $cmdLine -Wait -PassThru -NoNewWindow
+          $exitCode = $proc.ExitCode
+          Write-Host "Installer exited with code $exitCode"
+          # 0: success. 3010: success but reboot requested. 862968804: success, no changes needed.
+          if ($exitCode -ne 0 -and $exitCode -ne 3010 -and $exitCode -ne 862968804) {
+            Write-Error "Visual Studio installer failed with exit code $exitCode"
             exit 1
           }
 
