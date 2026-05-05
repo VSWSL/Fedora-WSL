@@ -2,22 +2,32 @@ import os
 import sys
 import shutil
 
-PROGRAM_FILES = os.environ["ProgramFiles"]
+PROGRAM_FILES_ROOTS = [
+    os.environ.get("ProgramFiles", "C:\\Program Files"),
+    os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)"),
+]
 VISUAL_STUDIO_INSTALLED_VERSION = 2022
-VISUAL_STUDIO_INSTALLED_VARIANT = ["Community", "Professional", "Enterprise"]
+VISUAL_STUDIO_INSTALLED_VARIANT = [
+    "Community", "Professional", "Enterprise", "BuildTools"
+]
 
-MS_BUILD_PATH = '{}\\Microsoft Visual Studio\\{}\\{}\\MSBuild\\Current\\Bin\\MSBuild.exe'
+MS_BUILD_PATH_TEMPLATE = '{}\\Microsoft Visual Studio\\{}\\{}\\MSBuild\\Current\\Bin\\MSBuild.exe'
+MS_BUILD_PATH = None
 
-for variant in VISUAL_STUDIO_INSTALLED_VARIANT:
-    if os.path.exists(
-        MS_BUILD_PATH.format(
-            PROGRAM_FILES, VISUAL_STUDIO_INSTALLED_VERSION, variant
+for program_files in PROGRAM_FILES_ROOTS:
+    for variant in VISUAL_STUDIO_INSTALLED_VARIANT:
+        candidate = MS_BUILD_PATH_TEMPLATE.format(
+            program_files, VISUAL_STUDIO_INSTALLED_VERSION, variant
         )
-    ):
-        MS_BUILD_PATH = MS_BUILD_PATH.format(
-            PROGRAM_FILES, VISUAL_STUDIO_INSTALLED_VERSION, variant
-        )
+        if os.path.exists(candidate):
+            MS_BUILD_PATH = candidate
+            break
+    if MS_BUILD_PATH:
         break
+
+# Fall back to msbuild on PATH (e.g. set by microsoft/setup-msbuild in CI).
+if not MS_BUILD_PATH:
+    MS_BUILD_PATH = shutil.which("msbuild") or shutil.which("MSBuild.exe") or "msbuild"
 
 PROJECT_SOLUTION_PATH = os.path.join(os.path.curdir, 'FedoraWSL.sln')
 MS_BUILD_TARGET = "Build"
